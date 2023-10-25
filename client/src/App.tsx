@@ -1,31 +1,35 @@
-import React, { useState } from 'react'
+import React from 'react'
 import './App.css'
+import Item from './components/Item'
+import { useItems } from './hooks/useItems'
+import { useSEO } from './hooks/useSEO'
 
 
-type ItemId =  `${string}-${string}-${string}-${string}-${string}`
+export type ItemId =  `${string}-${string}-${string}-${string}-${string}`
 
-interface Item {
+export interface Item {
   id: ItemId,
   timestamp: number
   text: string
 }
 
-const INITIAL_ITEMS: Item[] = [
-  {
-    id: crypto.randomUUID(),
-    timestamp: Date.now(),
-    text: 'Books',
-  },
-  {
-    id: crypto.randomUUID(),
-    timestamp: Date.now(),
-    text: 'Games'
-  }
-]
+// const INITIAL_ITEMS: Item[] = [
+//   {
+//     id: crypto.randomUUID(),
+//     timestamp: Date.now(),
+//     text: 'Books',
+//   },
+//   {
+//     id: crypto.randomUUID(),
+//     timestamp: Date.now(),
+//     text: 'Games'
+//   }
+// ]
 
 function App() {
 
-  const [items, setItems] = useState(INITIAL_ITEMS)
+  const {items, addItem, removeItem} = useItems()
+  useSEO({title: `[${items.length}] Prueba de React`, description: 'Añadir elementos a una lista'})
 
   const handleSubmit = (event:React.FormEvent<HTMLFormElement>)=> {
     event.preventDefault()
@@ -34,24 +38,13 @@ function App() {
     const input = elements.namedItem('item') as HTMLInputElement
     const isInput = input instanceof HTMLInputElement
     if(!isInput && input == null) return
-
-    const newItem: Item  = {
-      id: crypto.randomUUID(),
-      text: input.value, 
-      timestamp: Date.now(),
-   
-    }
-
-    setItems((prevItems)=> [...prevItems, newItem])
+    addItem(input.value)
     input.value = ''
  
   }
 
   const handleRemoveItem = (id: ItemId) => () => {
-    setItems(prevItems => {
-      return prevItems.filter(currentItem => currentItem.id !== id)
-    })
-
+    removeItem(id)
   }
 
   return (
@@ -59,7 +52,7 @@ function App() {
      <main>
       <aside>
       <h1>Prueba tecnica React + Typescript</h1>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} aria-label="Add an item to list">
           <label>
             Elemento a introducir
             <input type="text" name="item" required placeholder="Books"/>
@@ -73,17 +66,13 @@ function App() {
           items.length === 0 ? 
            (
            <p>
-            <strong>No hay elementos en la lista </strong>
+            <strong>No hay elementos en la lista</strong>
            </p>
            ) : (
-            <ul> { items.map(item => {
+            <ul> { 
+              items.map(item => {
             return (
-              <li key={item.id}>
-                {item.text}
-                <button onClick={handleRemoveItem(item.id)}>
-                  Eliminar elemento
-                </button>
-              </li>
+              <Item {...item} handleClick={handleRemoveItem(item.id)} key={item.id}/>
               ) } ) 
             }
           </ul> 
